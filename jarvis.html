@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS Assistant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(to right, #60a5fa, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .panel {
+            background: rgba(31, 41, 55, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .wave-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 120px;
+            margin-bottom: 30px;
+            gap: 4px;
+        }
+
+        .wave-bar {
+            width: 8px;
+            background: linear-gradient(to top, #3b82f6, #22d3ee);
+            border-radius: 4px;
+            transition: height 0.2s ease;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(55, 65, 81, 0.5);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+
+        .status-dot.active {
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 32px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-power {
+            background: #ef4444;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-power.active {
+            background: #22c55e;
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.5);
+        }
+
+        .btn-mic {
+            background: #4b5563;
+        }
+
+        .btn-mic.active {
+            background: #3b82f6;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
+        }
+
+        .message-box {
+            background: rgba(55, 65, 81, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .message-label {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 5px;
+        }
+
+        .message-text {
+            color: #60a5fa;
+        }
+
+        .response-box {
+            background: rgba(30, 58, 138, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .response-text {
+            color: #22d3ee;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(55, 65, 81, 0.3);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .history-command {
+            color: #d1d5db;
+            font-size: 14px;
+        }
+
+        .history-time {
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .commands-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            font-size: 14px;
+            color: #d1d5db;
+        }
+
+        @media (min-width: 640px) {
+            .commands-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 15px;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .no-data {
+            color: #6b7280;
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">J.A.R.V.I.S</h1>
+            <p class="subtitle">Just A Rather Very Intelligent System</p>
+        </div>
+
+        <div class="panel">
+            <div class="wave-container" id="waveContainer"></div>
+
+            <div class="center">
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Sistema desactivado</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-power" id="powerBtn" onclick="togglePower()"></button>
+                <button class="btn btn-mic" id="micBtn" onclick="toggleListening()" disabled></button>
+            </div>
+
+            <div id="transcriptBox" style="display:none;" class="message-box">
+                <div class="message-label">Comando detectado:</div>
+                <div class="message-text" id="transcriptText"></div>
+            </div>
+
+            <div id="responseBox" style="display:none;" class="message-box response-box">
+                <div class="message-label"> JARVIS:</div>
+                <div class="response-text" id="responseText"></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3 class="section-title">Historial de Comandos</h3>
+            <div id="historyContainer">
+                <div class="no-data">No hay comandos recientes</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3 class="section-title">Comandos Disponibles</h3>
+            <div class="commands-grid">
+                <div>• "Abrir WhatsApp/Gmail/Chrome"</div>
+                <div>• "Abrir YouTube/Maps/Instagram"</div>
+                <div>• "Abrir cámara/configuración"</div>
+                <div>• "Buscar [término]"</div>
+                <div>• "¿Qué hora es?"</div>
+                <div>• "¿Qué fecha es hoy?"</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let recognition;
+        let isPowered = false;
+        let isListening = false;
+        let commandHistory = [];
+        const synth = window.speechSynthesis;
+
+        // Crear barras de onda
+        const waveContainer = document.getElementById('waveContainer');
+        for (let i = 0; i < 20; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'wave-bar';
+            bar.style.height = '10%';
+            waveContainer.appendChild(bar);
+        }
+
+        // Inicializar reconocimiento de voz
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'es-ES';
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                isListening = true;
+                updateUI();
+                updateStatus('Escuchando...');
+                animateWaves();
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                updateUI();
+                if (isPowered) {
+                    updateStatus('En espera de comando');
+                    setTimeout(() => {
+                        if (isPowered) {
+                            try {
+                                recognition.start();
+                            } catch (e) {}
+                        }
+                    }, 500);
+                }
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                showTranscript(transcript);
+                processCommand(transcript.toLowerCase());
+            };
+
+            recognition.onerror = (event) => {
+                isListening = false;
+                updateUI();
+                
+                if (event.error === 'not-allowed') {
+                    updateStatus(' Permiso de micrófono denegado');
+                    speak('Necesito permiso para usar el micrófono');
+                } else if (event.error === 'no-speech') {
+                    updateStatus('No detecté ningún comando');
+                } else if (event.error === 'network') {
+                    updateStatus('Error de conexión');
+                    speak('Necesito conexión a internet');
+                } else {
+                    updateStatus(`Error: ${event.error}`);
+                }
+            };
+        }
+
+        function togglePower() {
+            if (!isPowered) {
+                isPowered = true;
+                updateStatus('Sistema activado');
+                speak('Sistemas iniciados. ¿En qué puedo ayudarle, señor?');
+                setTimeout(() => {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        updateStatus('Error al iniciar micrófono');
+                    }
+                }, 2000);
+            } else {
+                isPowered = false;
+                isListening = false;
+                updateStatus('Sistema desactivado');
+                try {
+                    recognition.stop();
+                } catch (e) {}
+                synth.cancel();
+            }
+            updateUI();
+        }
+
+        function toggleListening() {
+            if (!isPowered) return;
+            
+            if (isListening) {
+                try {
+                    recognition.stop();
+                } catch (e) {}
+            } else {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    updateStatus('Error al iniciar micrófono');
+                }
+            }
+        }
+
+        function speak(text) {
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-ES';
+            utterance.rate = 1.1;
+            utterance.pitch = 1.0;
+            synth.speak(utterance);
+            showResponse(text);
+        }
+
+        function processCommand(command) {
+            addToHistory(command);
+            
+            let responseText = '';
+            let action = null;
+
+            if (command.includes('abrir') || command.includes('abre')) {
+                if (command.includes('whatsapp')) {
+                    responseText = 'Abriendo WhatsApp';
+                    action = 'https://web.whatsapp.com';
+                } else if (command.includes('gmail') || command.includes('correo')) {
+                    responseText = 'Abriendo Gmail';
+                    action = 'https://mail.google.com';
+                } else if (command.includes('chrome') || command.includes('navegador')) {
+                    responseText = 'Abriendo Chrome';
+                    action = 'https://www.google.com';
+                } else if (command.includes('youtube')) {
+                    responseText = 'Abriendo YouTube';
+                    action = 'https://www.youtube.com';
+                } else if (command.includes('maps') || command.includes('mapas')) {
+                    responseText = 'Abriendo Google Maps';
+                    action = 'https://maps.google.com';
+                } else if (command.includes('spotify')) {
+                    responseText = 'Abriendo Spotify';
+                    action = 'https://open.spotify.com';
+                } else if (command.includes('instagram')) {
+                    responseText = 'Abriendo Instagram';
+                    action = 'https://www.instagram.com';
+                } else if (command.includes('twitter') || command.includes('x')) {
+                    responseText = 'Abriendo Twitter';
+                    action = 'https://twitter.com';
+                }
+            } else if (command.includes('buscar') || command.includes('busca')) {
+                const query = command.replace(/buscar|busca/g, '').trim();
+                responseText = `Buscando ${query} en Google`;
+                action = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            } else if (command.includes('hora')) {
+                const time = new Date().toLocaleTimeString('es-ES');
+                responseText = `Son las ${time}`;
+            } else if (command.includes('fecha')) {
+                const date = new Date().toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                responseText = `Hoy es ${date}`;
+            } else if (command.includes('hola') || command.includes('jarvis')) {
+                responseText = 'Hola señor, ¿en qué puedo ayudarle?';
+            } else if (command.includes('gracias')) {
+                responseText = 'Es un placer servirle, señor';
+            } else if (command.includes('adiós') || command.includes('hasta luego')) {
+                responseText = 'Hasta luego, señor. Que tenga un buen día';
+            } else {
+                responseText = 'Lo siento señor, no entendí ese comando';
+            }
+
+            speak(responseText);
+
+            if (action) {
+                setTimeout(() => {
+                    window.open(action, '_blank');
+                }, 1500);
+            }
+        }
+
+        function updateStatus(text) {
+            document.getElementById('statusText').textContent = text;
+        }
+
+        function updateUI() {
+            const powerBtn = document.getElementById('powerBtn');
+            const micBtn = document.getElementById('micBtn');
+            const statusDot = document.getElementById('statusDot');
+
+            if (isPowered) {
+                powerBtn.classList.add('active');
+                micBtn.disabled = false;
+                statusDot.classList.add('active');
+            } else {
+                powerBtn.classList.remove('active');
+                micBtn.disabled = true;
+                statusDot.classList.remove('active');
+                stopWaveAnimation();
+            }
+
+            if (isListening) {
+                micBtn.classList.add('active');
+            } else {
+                micBtn.classList.remove('active');
+                stopWaveAnimation();
+            }
+        }
+
+        function showTranscript(text) {
+            document.getElementById('transcriptText').textContent = text;
+            document.getElementById('transcriptBox').style.display = 'block';
+        }
+
+        function showResponse(text) {
+            document.getElementById('responseText').textContent = text;
+            document.getElementById('responseBox').style.display = 'block';
+        }
+
+        function addToHistory(command) {
+            const time = new Date().toLocaleTimeString('es-ES');
+            commandHistory.unshift({ command, time });
+            commandHistory = commandHistory.slice(0, 5);
+            updateHistory();
+        }
+
+        function updateHistory() {
+            const container = document.getElementById('historyContainer');
+            if (commandHistory.length === 0) {
+                container.innerHTML = '<div class="no-data">No hay comandos recientes</div>';
+            } else {
+                container.innerHTML = commandHistory.map(item => `
+                    <div class="history-item">
+                        <span class="history-command">${item.command}</span>
+                        <span class="history-time">${item.time}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        let waveInterval;
+        function animateWaves() {
+            const bars = document.querySelectorAll('.wave-bar');
+            waveInterval = setInterval(() => {
+                bars.forEach(bar => {
+                    bar.style.height = Math.random() * 100 + '%';
+                });
+            }, 100);
+        }
+
+        function stopWaveAnimation() {
+            clearInterval(waveInterval);
+            const bars = document.querySelectorAll('.wave-bar');
+            bars.forEach(bar => {
+                bar.style.height = '10%';
+            });
+        }
+    </script>
+</body>
+</html>
